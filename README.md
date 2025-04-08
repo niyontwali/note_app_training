@@ -7,3 +7,4 @@ This is an api development project for a note application
 `composer install`
 3. Run the project using 
 `php artisan serve`
+- Bullet
