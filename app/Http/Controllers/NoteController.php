@@ -6,6 +6,7 @@ use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\UpdateNoteRequest;
 use App\Models\Note;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class NoteController extends Controller
 {
@@ -14,22 +15,35 @@ class NoteController extends Controller
      */
     public function index()
     {
-        return Note::all();
+        $notes = Note::all();
+        return response()->json([
+            'ok' => true,
+            'data' => $notes
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
+
     {
         $fields = $request->validate([
             'title' => 'required|max:255',
-            'content' => 'nullable|max:500'
+            'content' => 'nullable|max:500',
+            'user_id' => 'required|exists:users,id'
         ]);
 
-        Note::create($fields);
-    
+       $newUser =  Note::create($fields);
+
+        if(!$newUser) {
+            return response()->json([
+                'ok'=> false,
+                'message' => 'User was not created, retry'
+            ]);
+        }
         return response()->json([
+            'ok' => true,
             'message' => 'Note created succeffully'
         ]);
     }
@@ -47,15 +61,19 @@ class NoteController extends Controller
      */
     public function update(Request $request, Note $note)
     {
+        Gate::authorize('modify', $note);
+
         $fields = $request -> validate([
             'title' => 'required|max:255',
-            'content'=>'nullable|max:500'
+            'content'=>'nullable|max:500',
+            'user_id' => 'required|exists:users,id'
         ]);
 
         $note->update($fields); // updated your data
-        return [
-            "message" => "Note updated successfully"
-        ];
+        return response() -> json([
+            'ok'=>true,
+            'message' => 'Note updated successfully'
+        ]);
     }
 
     /**
@@ -63,10 +81,14 @@ class NoteController extends Controller
      */
     public function destroy(Note $note)
     {
+        // Policy
+        Gate::authorize('modify', $note);
+
         $note->delete();
 
         return response()->json([
-            "message" => "Note deleted successfully"
+            'ok' => true,
+            'message' => 'Note deleted successfully'
         ]);
     }
 }
