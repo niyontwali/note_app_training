@@ -16,7 +16,8 @@ class AuthController extends Controller {
         $fields = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:8'
+            'password' => 'required|string|min:8',
+            'role' =>'sometimes|in:user,admin'
         ]);
 
         // Hash password
